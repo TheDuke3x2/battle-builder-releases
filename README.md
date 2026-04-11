@@ -3,7 +3,7 @@
 A PKHeX plugin for bulk-applying competitive builds to Pokémon across save file boxes.
 Applies abilities, natures, stat natures, EVs, movesets, level, IVs, and hyper training —
 individually or all at once — using a mapping list paired with a live competitive build
-dictionary sourced from Pikalytics, Smogon, and/or Auto Build.
+dictionary sourced from Pikalytics and/or Smogon.
 
 Currently supports **BDSP** (Brilliant Diamond / Shining Pearl). The architecture is
 designed to support additional games via per-game JSON build files.
@@ -26,7 +26,8 @@ designed to support additional games via per-game JSON build files.
 4. Launch PKHeX — the plugin appears under **Tools → Battle Builder**.
 
 > **Note:** The `builds/` folder is created automatically on first launch. Open Battle
-> Builder and click **🔄 Refresh** to populate the build dictionary before applying.
+> Builder and click **Refresh Builds** or **Merge Refresh** to populate the build
+> dictionary before applying.
 
 > **Note:** If PKHeX is in a cloud-synced folder (Dropbox, OneDrive), right-click the DLL
 > → Properties → Unblock if the plugin doesn't appear.
@@ -37,7 +38,7 @@ designed to support additional games via per-game JSON build files.
 
 1. Open a save file in PKHeX.
 2. Go to **Tools → Battle Builder**.
-3. Click **🔄 Refresh** to populate the build dictionary.
+3. Click **🔄 Refresh Builds** (or **🔀 Merge Refresh**) to populate the build dictionary.
 4. **Paste** a mapping list into the text box, or click **Load from file…**.
 5. Click **Preview / Validate ▶** to check for errors and preview resolved builds.
 6. Set your **Box Range** and verify the detected game label is correct.
@@ -51,6 +52,7 @@ paste a species-only list and use **Check All**:
 Garchomp
 Togekiss
 Lucario
+Garchomp
 Clefable
 ```
 
@@ -66,7 +68,7 @@ Provide a CSV-style list mapping species to the values you want applied.
 Garchomp                         # species only — uses full dictionary build
 Alakazam, Magic Guard            # override ability only
 Gengar, Cursed Body, Timid       # override ability + nature
-445,, Jolly, Jolly               # skip ability, set nature + stat nature
+445,, Jolly,, Jolly              # skip ability, set nature + stat nature
 ```
 
 | Column | Notes |
@@ -103,7 +105,7 @@ at once, **Uncheck All** to clear.
 | **Ability** | Sets ability from CSV or dictionary. Reverted if PKHeX marks the result illegal. |
 | **Nature** | Sets base Nature. Reverted if illegal — use Allow Illegal to force. |
 | **Stat Nature** | Sets Stat Nature (mint effect) independently of base Nature. |
-| **Competitive EVs** | Applies EV spread from dictionary. |
+| **Competitive EVs** | Applies EV spread from dictionary, or a stat-profile fallback if no entry exists. |
 | **Competitive Moves** | Applies moveset from dictionary. PP set automatically. |
 | **Set Level 100** | Sets the Pokémon to level 100. Enable before Hyper Train. |
 | **Max IVs** | Sets all IVs to 31, skipping stats already covered by Hyper Training. |
@@ -137,62 +139,34 @@ Each Pokémon produces a single log line after apply:
 ## Competitive Build Dictionary
 
 The plugin maintains a per-game JSON file (e.g. `builds/bdsp/bdsp_builds.json`) loaded
-at runtime. Populate it via the **🔄 Refresh** button.
+at runtime. Populate it via the refresh controls in the toolbar.
 
-### Source Priority List
+### Refresh Builds
 
-The source panel shows three sources in priority order (top = highest):
+Select a source and click **🔄 Refresh Builds**:
 
 | Source | Coverage | Moves |
 |---|---|---|
 | **Pikalytics** | All 493 BDSP species (usage-based) | Top 4 by usage % |
 | **Smogon** | Competitively relevant species only | First listed set |
-| **Auto Build** | All species and all alternate forms | Stat-derived (see below) |
 
-Check or uncheck Pikalytics and Smogon to include them. **Auto Build is always active**
-and always last — it fills any species or form not covered by the checked sources.
+Species not covered by the selected source receive a stat-derived base entry
+(best ability, sensible nature, physical/special EV split — no moves).
 
-Use **▲ / ▼** to reorder Pikalytics and Smogon. Click **🔄 Refresh** to fetch and merge
-all checked sources in the displayed priority order.
+### Merge Refresh
+
+Click **🔀 Merge Refresh** to fetch both sources and combine them. Priority order is
+shown in the toolbar — click **⇄** to swap.
 
 **Merge logic per species:**
-1. Highest-priority checked source with moves → use it
-2. Only one checked source has moves → use it directly
-3. Both checked sources have moves → highest priority wins
-4. No checked source covers the species → Auto Build
+1. Highest-priority source with moves → use it
+2. Only one source has moves → use it directly
+3. Both have moves → highest priority wins
+4. Neither has moves → highest-priority source that exists
+5. No source covers the species → stat-derived base entry
 
 Each JSON entry records its origin in `_buildSource`:
-`"Pikalytics"`, `"Smogon"`, `"Pikalytics>Smogon"`, or `"Auto Build"`.
-
----
-
-## Auto Build
-
-Auto Build generates a complete entry for every species (and alternate form) not covered
-by Pikalytics or Smogon. All fields are derived from base stats:
-
-- **Ability** — Hidden Ability if available, otherwise Ability 1
-- **Nature / EVs** — classified by stat profile into one of seven roles:
-
-| Role | Nature | EV Spread (HP/Atk/Def/SpA/SpD/Spe) |
-|---|---|---|
-| Physical Sweeper | Jolly / Adamant | 6/252/0/0/0/252 |
-| Special Sweeper  | Timid / Modest  | 6/0/0/252/0/252 |
-| Physical Wall    | Impish          | 252/0/252/0/6/0 |
-| Special Wall     | Calm            | 252/0/6/0/252/0 |
-| Mixed Wall       | Impish          | 252/0/128/0/128/0 |
-| Bulky Attacker   | Adamant         | 252/252/0/0/6/0 |
-| Bulky Special    | Modest          | 252/0/0/252/6/0 |
-
-- **Moves** — filled using a three-pass formula: role-specific pool → universal pool →
-  raw learnset. Guarantees 4 moves for any species with 4+ learnable moves (level-up and
-  TM only; egg moves are freely included in BDSP and Gen 9+ where they do not require
-  breeding).
-- **`_buildRole`** — the classified role is recorded in the JSON for reference.
-
-For games where egg moves require breeding, any egg move that has no level-up/TM
-equivalent is written in `"EggMove|*Substitute"` format — the egg move is tried first
-at apply time and the substitute is used if the Pokémon's origin does not permit it.
+`"Pikalytics"`, `"Smogon"`, `"Pikalytics>Smogon"`, or `"Base"`.
 
 ---
 
@@ -200,8 +174,23 @@ at apply time and the substitute is used if the Pokémon's origin does not permi
 
 The applier matches form automatically and falls back to form 0 if no form-specific
 entry exists. Multi-form species use a JSON array with a `"form"` field per element.
-Auto Build generates entries for all alternate forms independently, each with their own
-stat-derived ability, nature, EVs, and moves.
+
+---
+
+## EV Spread Fallback
+
+Used when no dictionary entry exists. The heuristic classifies each species by stat
+profile and picks the matching preset.
+
+| Preset | HP | Atk | Def | SpAtk | SpDef | Spd |
+|---|---|---|---|---|---|---|
+| PhysicalSweeper | 6 | 252 | 0 | 0 | 0 | 252 |
+| SpecialSweeper | 6 | 0 | 0 | 252 | 0 | 252 |
+| PhysicalWall | 252 | 0 | 252 | 0 | 6 | 0 |
+| SpecialWall | 252 | 0 | 6 | 0 | 252 | 0 |
+| MixedWall | 252 | 0 | 128 | 0 | 128 | 0 |
+| BulkyAttacker | 252 | 252 | 0 | 0 | 6 | 0 |
+| BulkySpecial | 252 | 0 | 0 | 252 | 6 | 0 |
 
 ---
 
@@ -229,13 +218,13 @@ BattleBuilder/
 ├── BattleApplier.cs            ← applies mappings; all legality via PKHeX
 ├── BuildsJson.cs               ← JSON engine + GameBuildsConfig + BDSPBuildsJson
 ├── MappingParser.cs            ← parses CSV into AbilityMapping objects
-├── CompetitiveBuilds.cs        ← PokemonBuild record, EVSpread, role pools, registry
+├── CompetitiveBuilds.cs        ← PokemonBuild record, EVSpread, master registry
 ├── GenDetector.cs              ← detects save generation and game
 ├── README.md
 ├── CHANGELOG.md
 └── builds/                     ← per-game data (runtime, not compiled)
     ├── bdsp/
-    │   └── bdsp_builds.json    ← populate via 🔄 Refresh
+    │   └── bdsp_builds.json    ← populate via Refresh Builds / Merge Refresh
     ├── swsh/  ← shell
     ├── pla/   ← shell
     ├── hgss/  ← shell
@@ -254,14 +243,16 @@ BattleBuilder/
 > The `builds/` folder is the plugin's runtime data directory, stored alongside the
 > DLL in your PKHeX `plugins/` folder. It holds one JSON file per game containing the
 > competitive build dictionary — abilities, natures, EV spreads, and movesets — loaded
-> at startup and populated via Refresh. The folder structure and empty shell JSON files
-> for all supported games are created automatically on first launch.
+> at startup and populated via Refresh Builds or Merge Refresh. The folder structure
+> and empty shell JSON files for all supported games are created automatically on first
+> launch. Shell game folders become active once Refresh Builds support is added for
+> that game.
 
 ---
 
 ## JSON Format Reference
 
-Single-form species (Pikalytics source):
+Single-form species:
 ```json
 "445": {
   "name": "Garchomp",
@@ -274,24 +265,10 @@ Single-form species (Pikalytics source):
 }
 ```
 
-Auto Build entry with role and egg move delimiter:
-```json
-"27": {
-  "name": "Sandshrew",
-  "_buildSource": "Auto Build",
-  "_buildRole": "Physical Wall",
-  "ability": "Sand Rush",
-  "nature": "Impish",
-  "statNature": "Impish",
-  "evs": "252/0/252/0/6/0",
-  "moves": ["Earthquake", "Knock Off|*Rock Slide", "Swords Dance", "Facade"]
-}
-```
-
 Multi-form species:
 ```json
-"487": [
-  { "form": 0, "name": "Giratina",          "_buildSource": "Auto Build", ... },
-  { "form": 1, "name": "Giratina (Origin)", "_buildSource": "Auto Build", ... }
+"479": [
+  { "form": 0, "name": "Rotom",   "ability": "Levitate", "nature": "Timid", ... },
+  { "form": 2, "name": "Rotom-W", "ability": "Levitate", "nature": "Timid", ... }
 ]
 ```
