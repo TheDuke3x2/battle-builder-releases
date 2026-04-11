@@ -4,6 +4,25 @@ All notable changes to Battle Builder are documented here.
 
 ---
 
+## [1.2.0]
+
+### Added
+
+- **LGPE support** — full Let's Go Pikachu / Eevee support covering all 151 Kanto species + Meltan.
+  - Awakening Values (AVs) replace EVs in the UI and JSON (0–200 per stat, no total cap)
+  - Stat Nature checkbox hidden for LGPE (no stat nature in game)
+
+### Fixed
+
+- **Move slot swapping** — when a desired move already exists in a different slot, the applier now swaps slots instead of writing a duplicate, which PKHeX flags as illegal. Affected any Pokémon whose current moveset contained one of the target moves out of order (e.g. Will-O-Wisp in slot 2 when the build wants it in slot 1).
+- **Check All** now correctly detects Max IVs as an active option when deciding whether to uncheck all.
+
+### Improved
+
+- **PkmHelper** — extracted LGPE-specific PKM preparation (CP sync, Stat_Level init, hyper train flags) into a shared helper class to keep the apply engine game-agnostic.
+
+---
+
 ## [1.1.0]
 
 ### Added

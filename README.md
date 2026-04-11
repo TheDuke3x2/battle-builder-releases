@@ -1,12 +1,13 @@
 # Battle Builder — PKHeX Plugin
 
 A PKHeX plugin for bulk-applying competitive builds to Pokémon across save file boxes.
-Applies abilities, natures, stat natures, EVs, movesets, level, IVs, and hyper training —
+Applies abilities, natures, stat natures, EVs/AVs, movesets, level, IVs, and hyper training —
 individually or all at once — using a mapping list paired with a live competitive build
 dictionary sourced from Pikalytics, Smogon, and/or Auto Build.
 
-Currently supports **BDSP** (Brilliant Diamond / Shining Pearl). The architecture is
-designed to support additional games via per-game JSON build files.
+Currently supports **BDSP** (Brilliant Diamond / Shining Pearl) and **LGPE** (Let's Go
+Pikachu / Eevee). The architecture is designed to support additional games via per-game
+JSON build files.
 
 ---
 
@@ -100,14 +101,14 @@ at once, **Uncheck All** to clear.
 
 | Option | What it does |
 |---|---|
-| **Ability** | Sets ability from CSV or dictionary. Reverted if PKHeX marks the result illegal. |
+| **Ability** | Sets ability from CSV or dictionary. Reverted if PKHeX marks the result illegal. Hidden in LGPE (no ability mechanic). |
 | **Nature** | Sets base Nature. Reverted if illegal — use Allow Illegal to force. |
-| **Stat Nature** | Sets Stat Nature (mint effect) independently of base Nature. |
-| **Competitive EVs** | Applies EV spread from dictionary. |
+| **Stat Nature** | Sets Stat Nature (mint effect) independently of base Nature. Hidden in LGPE (not applicable). |
+| **Competitive EVs / AVs** | Applies EV spread (BDSP) or Awakening Values (LGPE) from dictionary. |
 | **Competitive Moves** | Applies moveset from dictionary. PP set automatically. |
 | **Set Level 100** | Sets the Pokémon to level 100. Enable before Hyper Train. |
 | **Max IVs** | Sets all IVs to 31, skipping stats already covered by Hyper Training. |
-| **Hyper Train** | Applies Hyper Training via PKHeX's suggested data. Requires level 100. |
+| **Hyper Train** | Applies Hyper Training flags directly. Requires level 100. |
 | **Allow Illegal** | Bypasses all PKHeX legality checks for every field. |
 
 **Mutual exclusions:** Enabling Hyper Train disables Max IVs (and vice versa), since
@@ -145,9 +146,9 @@ The source panel shows three sources in priority order (top = highest):
 
 | Source | Coverage | Moves |
 |---|---|---|
-| **Pikalytics** | All 493 BDSP species (usage-based) | Top 4 by usage % |
+| **Pikalytics** | All species for the detected game (usage-based) | Top 4 by usage % |
 | **Smogon** | Competitively relevant species only | First listed set |
-| **Auto Build** | All species and all alternate forms | Stat-derived (see below) |
+| **Auto Build** | All species and all obtainable alternate forms | Stat-derived (see below) |
 
 Check or uncheck Pikalytics and Smogon to include them. **Auto Build is always active**
 and always last — it fills any species or form not covered by the checked sources.
@@ -171,7 +172,7 @@ Each JSON entry records its origin in `_buildSource`:
 Auto Build generates a complete entry for every species (and alternate form) not covered
 by Pikalytics or Smogon. All fields are derived from base stats:
 
-- **Ability** — Hidden Ability if available, otherwise Ability 1
+- **Ability** — Hidden Ability if available, otherwise Ability 1. Empty string for LGPE (no ability mechanic).
 - **Nature / EVs** — classified by stat profile into one of seven roles:
 
 | Role | Nature | EV Spread (HP/Atk/Def/SpA/SpD/Spe) |
@@ -183,6 +184,9 @@ by Pikalytics or Smogon. All fields are derived from base stats:
 | Mixed Wall       | Impish          | 252/0/128/0/128/0 |
 | Bulky Attacker   | Adamant         | 252/252/0/0/6/0 |
 | Bulky Special    | Modest          | 252/0/0/252/6/0 |
+
+For **LGPE**, EVs are replaced by **Awakening Values (AVs)**. All stat roles use a flat
+200/200/200/200/200/200 spread (max AVs, no total cap). Stat Nature is not written.
 
 - **Moves** — filled using a three-pass formula: role-specific pool → universal pool →
   raw learnset. Guarantees 4 moves for any species with 4+ learnable moves (level-up and
@@ -200,8 +204,12 @@ at apply time and the substitute is used if the Pokémon's origin does not permi
 
 The applier matches form automatically and falls back to form 0 if no form-specific
 entry exists. Multi-form species use a JSON array with a `"form"` field per element.
-Auto Build generates entries for all alternate forms independently, each with their own
-stat-derived ability, nature, EVs, and moves.
+Auto Build generates entries for all **obtainable** alternate forms independently, each
+with their own stat-derived ability, nature, EVs/AVs, and moves.
+
+The **BF** column in the preview grid is a **Battle Form Toggle** — click it to cycle
+through a species' available forms before applying. Hover the column header for a
+tooltip description.
 
 ---
 
@@ -227,7 +235,8 @@ BattleBuilder/
 ├── BattleBuilderPlugin.cs      ← IPlugin entry point, menu registration
 ├── BattleBuilderForm.cs        ← WinForms UI
 ├── BattleApplier.cs            ← applies mappings; all legality via PKHeX
-├── BuildsJson.cs               ← JSON engine + GameBuildsConfig + BDSPBuildsJson
+├── PkmHelper.cs                ← game-specific PKM preparation (CP sync, HT flags, etc.)
+├── BuildsJson.cs               ← JSON engine + GameBuildsConfig + BDSPBuildsJson + LGPEBuildsJson
 ├── MappingParser.cs            ← parses CSV into AbilityMapping objects
 ├── CompetitiveBuilds.cs        ← PokemonBuild record, EVSpread, role pools, registry
 ├── GenDetector.cs              ← detects save generation and game
@@ -236,6 +245,8 @@ BattleBuilder/
 └── builds/                     ← per-game data (runtime, not compiled)
     ├── bdsp/
     │   └── bdsp_builds.json    ← populate via 🔄 Refresh
+    ├── lgpe/
+    │   └── lgpe_builds.json    ← populate via 🔄 Refresh
     ├── swsh/  ← shell
     ├── pla/   ← shell
     ├── hgss/  ← shell
@@ -243,7 +254,6 @@ BattleBuilder/
     ├── usum/  ← shell
     ├── dppt/  ← shell
     ├── xy/    ← shell
-    ├── lgpe/  ← shell
     ├── sm/    ← shell
     ├── rse/   ← shell
     ├── frlg/  ← shell
@@ -261,7 +271,7 @@ BattleBuilder/
 
 ## JSON Format Reference
 
-Single-form species (Pikalytics source):
+**BDSP** — single-form species (Pikalytics source):
 ```json
 "445": {
   "name": "Garchomp",
@@ -274,7 +284,7 @@ Single-form species (Pikalytics source):
 }
 ```
 
-Auto Build entry with role and egg move delimiter:
+**BDSP** — Auto Build entry with role and egg move delimiter:
 ```json
 "27": {
   "name": "Sandshrew",
@@ -285,6 +295,18 @@ Auto Build entry with role and egg move delimiter:
   "statNature": "Impish",
   "evs": "252/0/252/0/6/0",
   "moves": ["Earthquake", "Knock Off|*Rock Slide", "Swords Dance", "Facade"]
+}
+```
+
+**LGPE** — `avs` replaces `evs`, `statNature` is omitted, `ability` is always `""`:
+```json
+"59": {
+  "name": "Arcanine",
+  "_buildSource": "Pikalytics",
+  "ability": "",
+  "nature": "Jolly",
+  "avs": "200/200/200/200/200/200",
+  "moves": ["Will-O-Wisp", "Crunch", "Flare Blitz", "Teleport"]
 }
 ```
 
