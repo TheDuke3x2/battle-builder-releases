@@ -1,7 +1,19 @@
 # Changelog
 
 All notable changes to Battle Builder are documented here.
-Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
+
+---
+
+## [1.1.0]
+
+### Added
+
+- **Auto Build** — introduced as a fallback for Pokémon with no competitive data from Pikalytics or Smogon. Derives ability, nature, and EVs from base stats, and classifies each Pokémon into a role (Physical Sweeper, Special Wall, etc.) stored as `_buildRole` in the JSON.
+  - Move generation uses a three-pass formula: role-specific pool → universal pool → raw learnset, guaranteeing 4 moves for any species with 4+ learnable moves. Egg moves are paired with a non-egg substitute using the `EggMove|*Substitute` format for games where egg moves require breeding; in BDSP and later games where egg moves are freely transferable, they are treated as normal learnable moves.
+
+### Improved
+
+- **Move application** — improved reliability across all build sources, correctly handling cases where intermediate move states caused valid sets to be rejected.
 
 ---
 
@@ -48,7 +60,7 @@ Full BDSP support. All 493 species covered via Pikalytics and/or Smogon refresh.
 - Pikalytics refresh for BDSP — all 493 species, top 4 moves by usage
 - Smogon refresh for BDSP — competitively relevant species, first listed set
 - Merge Refresh combining both sources with configurable priority order
-- Per-entry `_buildSource` field recording origin (`Pikalytics`, `Smogon`, `Pikalytics>Smogon`, `Base`)
+- Per-entry `_buildSource` field recording origin (`Pikalytics`, `Smogon`, `Pikalytics>Smogon`, `Auto Build`)
 - Stat-derived base entries for species not covered by any source
 - Multi-form support with per-form dictionary entries
 - Auto-bootstrap: creates `builds/` folder structure and shell JSONs on first launch
