@@ -4,6 +4,36 @@ All notable changes to Battle Builder are documented here.
 
 ---
 
+## [1.3.1]
+
+### Fixed
+
+- **Check All Competitive skipped Level 100** — Set Level 100 was not included in the Check All Competitive selection, so it had to be ticked manually every time.
+
+### Improved
+
+- **Check All Competitive** — the button now selects all competitive options (Stat Nature, EVs/AVs, GVs, Moves, Level 100, Hyper Train) without touching Nature, which is left to the user since it can affect legality more aggressively.
+
+---
+
+## [1.3.0]
+
+### Added
+
+- **PLA support** — full Pokémon Legends: Arceus support. All species covered via RankedBoost and Auto Build refresh. Grit Values (GVs) are applied per-stat using the IV-based formula (IV 31 → 7 GVs, IV 26–30 → 8, IV 20–25 → 9, IV 0–19 → 10).
+
+### Fixed
+
+- **Move application at level 100** — moves for level-100 Pokémon with encounter-restricted or partially-locked movesets no longer fail with "all moves skipped (illegal)". Root cause: intermediate per-slot legality checks during set assembly (with fewer than 4 moves set) caused PKHeX to report spurious "Empty Move" violations that cascaded to every remaining slot. The applier now assembles the full 4-slot set from the current moveset baseline before running a single legality check, falling back to per-slot validation only if the complete set is rejected.
+- **Subsequent-run false "moves updated"** — Pokémon whose moves were already correct no longer report "moves updated" on every subsequent run. Root cause: `TryApplySlot`'s "already in place" early return was being counted as a write, triggering a false change record. The applier now compares slot state directly against the original to detect real writes.
+
+### Improved
+
+- **Move apply skip** — when the current moveset already matches the build's primary moves exactly, the entire move apply step is skipped with no legality checks performed.
+- **Move substitution** — the substitute move set is only tried when it differs from the primary set, avoiding a redundant legality check on species with no egg-move substitutes defined.
+
+---
+
 ## [1.2.0]
 
 ### Added

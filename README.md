@@ -3,11 +3,11 @@
 A PKHeX plugin for bulk-applying competitive builds to Pokémon across save file boxes.
 Applies abilities, natures, stat natures, EVs/AVs, movesets, level, IVs, and hyper training —
 individually or all at once — using a mapping list paired with a live competitive build
-dictionary sourced from Pikalytics, Smogon, and/or Auto Build.
+dictionary sourced from Pikalytics, Smogon, RankedBoost, and/or Auto Build.
 
-Currently supports **BDSP** (Brilliant Diamond / Shining Pearl) and **LGPE** (Let's Go
-Pikachu / Eevee). The architecture is designed to support additional games via per-game
-JSON build files.
+Currently supports **BDSP** (Brilliant Diamond / Shining Pearl), **LGPE** (Let's Go
+Pikachu / Eevee), and **PLA** (Pokémon Legends: Arceus). The architecture is designed
+to support additional games via per-game JSON build files.
 
 ---
 
@@ -46,7 +46,7 @@ JSON build files.
 8. Click **Apply** and confirm. The log shows every change and any warnings.
 
 **Quick tip:** For a full competitive build from the dictionary with no CSV overrides,
-paste a species-only list and use **Check All**:
+paste a species-only list and use **Check All Competitive**:
 
 ```
 Garchomp
@@ -96,16 +96,18 @@ CSV values always override the dictionary. Blank columns fall back to the dictio
 
 ## Apply Options
 
-All checkboxes default to **off**. Use **Check All** to enable all competitive options
-at once, **Uncheck All** to clear.
+All checkboxes default to **off**. Use **Check All Competitive** to enable all competitive
+options at once (Stat Nature, EVs/AVs, GVs, Moves, Level 100, Hyper Train — Nature is
+left to the user). Toggles to **Uncheck All Competitive** to clear.
 
 | Option | What it does |
 |---|---|
 | **Ability** | Sets ability from CSV or dictionary. Reverted if PKHeX marks the result illegal. Hidden in LGPE (no ability mechanic). |
 | **Nature** | Sets base Nature. Reverted if illegal — use Allow Illegal to force. |
 | **Stat Nature** | Sets Stat Nature (mint effect) independently of base Nature. Hidden in LGPE (not applicable). |
-| **Competitive EVs / AVs** | Applies EV spread (BDSP) or Awakening Values (LGPE) from dictionary. |
-| **Competitive Moves** | Applies moveset from dictionary. PP set automatically. |
+| **Competitive EVs / AVs** | Applies EV spread (BDSP/PLA) or Awakening Values (LGPE) from dictionary. |
+| **Competitive GVs** | Applies Grit Values (PLA only). Max GVs per stat derived from IVs: IV 31 → 7, IV 26–30 → 8, IV 20–25 → 9, IV 0–19 → 10. Applied alongside EVs for Pokémon HOME compatibility. |
+| **Competitive Moves** | Applies moveset from dictionary. PP set automatically. Tries the full 4-slot set atomically first; falls back to per-slot with warnings if the full set is rejected. |
 | **Set Level 100** | Sets the Pokémon to level 100. Enable before Hyper Train. |
 | **Max IVs** | Sets all IVs to 31, skipping stats already covered by Hyper Training. |
 | **Hyper Train** | Applies Hyper Training flags directly. Requires level 100. |
@@ -144,17 +146,20 @@ at runtime. Populate it via the **🔄 Refresh** button.
 
 The source panel shows three sources in priority order (top = highest):
 
-| Source | Coverage | Moves |
-|---|---|---|
-| **Pikalytics** | All species for the detected game (usage-based) | Top 4 by usage % |
-| **Smogon** | Competitively relevant species only | First listed set |
-| **Auto Build** | All species and all obtainable alternate forms | Stat-derived (see below) |
+Available sources depend on the game:
 
-Check or uncheck Pikalytics and Smogon to include them. **Auto Build is always active**
+| Source | Games | Coverage | Moves |
+|---|---|---|---|
+| **Pikalytics** | BDSP, LGPE | All species (usage-based) | Top 4 by usage % |
+| **Smogon** | BDSP, LGPE | Competitively relevant species only | First listed set |
+| **RankedBoost** | PLA | All species | Top moves by ranking |
+| **Auto Build** | All | All species and all obtainable alternate forms | Stat-derived (see below) |
+
+Check or uncheck the available sources for the loaded game. **Auto Build is always active**
 and always last — it fills any species or form not covered by the checked sources.
 
-Use **▲ / ▼** to reorder Pikalytics and Smogon. Click **🔄 Refresh** to fetch and merge
-all checked sources in the displayed priority order.
+Use **▲ / ▼** to reorder sources. Click **🔄 Refresh** to fetch and merge all checked
+sources in the displayed priority order.
 
 **Merge logic per species:**
 1. Highest-priority checked source with moves → use it
@@ -163,14 +168,14 @@ all checked sources in the displayed priority order.
 4. No checked source covers the species → Auto Build
 
 Each JSON entry records its origin in `_buildSource`:
-`"Pikalytics"`, `"Smogon"`, `"Pikalytics>Smogon"`, or `"Auto Build"`.
+`"Pikalytics"`, `"Smogon"`, `"Pikalytics>Smogon"`, `"RankedBoost"`, or `"Auto Build"`.
 
 ---
 
 ## Auto Build
 
 Auto Build generates a complete entry for every species (and alternate form) not covered
-by Pikalytics or Smogon. All fields are derived from base stats:
+by any checked source. All fields are derived from base stats:
 
 - **Ability** — Hidden Ability if available, otherwise Ability 1. Empty string for LGPE (no ability mechanic).
 - **Nature / EVs** — classified by stat profile into one of seven roles:
@@ -247,8 +252,9 @@ BattleBuilder/
     │   └── bdsp_builds.json    ← populate via 🔄 Refresh
     ├── lgpe/
     │   └── lgpe_builds.json    ← populate via 🔄 Refresh
+    ├── pla/
+    │   └── pla_builds.json     ← populate via 🔄 Refresh
     ├── swsh/  ← shell
-    ├── pla/   ← shell
     ├── hgss/  ← shell
     ├── oras/  ← shell
     ├── usum/  ← shell
