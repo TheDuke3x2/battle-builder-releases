@@ -4,6 +4,18 @@ All notable changes to Battle Builder are documented here.
 
 ---
 
+## [1.3.1]
+
+### Fixed
+
+- **Check All Competitive skipped Level 100** — Set Level 100 was not included in the Check All Competitive selection, so it had to be ticked manually every time.
+
+### Improved
+
+- **Check All Competitive** — the button now selects all competitive options (Stat Nature, EVs/AVs, GVs, Moves, Level 100, Hyper Train) without touching Nature, which is left to the user since it can affect legality more aggressively.
+
+---
+
 ## [1.3.0]
 
 ### Added

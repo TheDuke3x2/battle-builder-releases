@@ -46,7 +46,7 @@ to support additional games via per-game JSON build files.
 8. Click **Apply** and confirm. The log shows every change and any warnings.
 
 **Quick tip:** For a full competitive build from the dictionary with no CSV overrides,
-paste a species-only list and use **Check All**:
+paste a species-only list and use **Check All Competitive**:
 
 ```
 Garchomp
@@ -96,8 +96,9 @@ CSV values always override the dictionary. Blank columns fall back to the dictio
 
 ## Apply Options
 
-All checkboxes default to **off**. Use **Check All** to enable all competitive options
-at once, **Uncheck All** to clear.
+All checkboxes default to **off**. Use **Check All Competitive** to enable all competitive
+options at once (Stat Nature, EVs/AVs, GVs, Moves, Level 100, Hyper Train — Nature is
+left to the user). Toggles to **Uncheck All Competitive** to clear.
 
 | Option | What it does |
 |---|---|
