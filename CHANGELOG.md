@@ -4,6 +4,44 @@ All notable changes to Battle Builder are documented here.
 
 ---
 
+## [2.0.0]
+
+### Added
+
+- **PLZA support** — full Pokémon Legends: Z-A support. All species and alternate forms covered via Game8, Deltias Gaming, YouTube, Reddit, and Auto Build.
+  - Sources: **Game8**, **Deltias Gaming**, **YouTube**, **Reddit** (in configurable priority order)
+  - **Merged datasource** — builds from all sources are consolidated into a single curated CSV, hosted externally as a Gist (`gist.github.com/TheDuke3x2/81fea803a427383d2a1fed27fb4e65d9`) and fetched fresh on every Refresh, just like any other scraped source. It acts as a first-class source just like any website or JSON feed, containing reviewed and curated builds from multiple origins, then merged with Auto Build fallbacks into `plza_builds.json`
+  - **Plus Move flags** — moves mastered through level-up in PLZA (using the PA9 `SetMovePlusFlag` API) are automatically set when applying at level 100, using `PersonalInfo9ZA.PlusMoveIndexes` cross-referenced against the PLZA learnset
+
+- **Multi-build system** — species can now have multiple builds per form from different sources. The Parsed Mappings grid cycles through all available builds with the **⟳ build cycle button** (`*` prefix on species names indicates multiple builds exist). Build index is tracked per-row and persists through form toggles.
+
+- **Build source display** — the source DB is shown in parentheses next to each species name in the Parsed Mappings grid (e.g. `Garchomp (Deltias)`, `*Greninja (Game8)`), making it clear which source is active for each row.
+
+- **Battle Form Toggle improvements** — the BF column toggle system was overhauled to support multiple independent toggle groups per species (e.g. Meowstic has separate M→Mega-M and F→Mega-F groups). The column header click expands/collapses all toggleable rows simultaneously.
+
+- **Species search filter** — a real-time search box above the Parsed Mappings grid filters rows by species name. When Competitive Moves is on, the associated moves sub-row stays visible alongside its matched species row.
+
+- **PLZA-specific move filtering** — invalid moves are filtered at both merged datasource load time and auto-build generation time:
+  - `PlzaLearnsetExcludes` — moves not available in PLZA (Twineedle, Eerie Spell, Poison Tail)
+  - `PlzaStarterUltimateMoves` — starter ultimate tutor moves restricted to final evolutions
+  - `PlzaFormExclusions` — forms excluded from auto-build (Ash-Greninja, Zygarde mid-battle forms, Magearna cosmetic duplicates)
+
+- **`FormNameOverrides`** — per-game canonical name overrides for forms whose PKHeX auto-name differs from the merged datasource (e.g. Eternal Flower Floette).
+
+- **`NormalizeSpeciesName`** — battle-form names are normalized to `Species (Form)` convention on Refresh write (e.g. `Mega Greninja` → `Greninja (Mega)`), ensuring UI display names match JSON names consistently.
+
+- **Regional dex ordering** — PLZA builds are written to JSON in regional dex order (Lumiose dex 1–232, then Hyperspace dex). The `national` field is embedded per-entry so the correct species key is always recovered on load regardless of JSON key encoding.
+
+### Improved
+
+- **Move pool completeness** — added missing STAB and coverage moves across all type pools: Sacred Fire, Heat Crash, Bitter Blade, Crabhammer, Origin Pulse, Volt Tackle, Supercell Slam, Petal Dance, Grass Knot, Low Kick, Dire Claw, Precipice Blades, Headlong Rush, Mud Bomb, Esper Wing, Psyshield Bash, Gigaton Hammer, and more. Fixed Wave Crash type classification (Normal → Water).
+
+- **Window default size** — increased default window dimensions (1300×750) and minimum size (1000×600) for better usability on standard displays.
+
+- **`MovePower` registry** — expanded with accurate base powers for all newly added moves.
+
+---
+
 ## [1.3.1]
 
 ### Fixed
