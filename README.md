@@ -3,11 +3,16 @@
 A PKHeX plugin for bulk-applying competitive builds to Pokémon across save file boxes.
 Applies abilities, natures, stat natures, EVs/AVs, movesets, level, IVs, and hyper training —
 individually or all at once — using a mapping list paired with a live competitive build
-dictionary sourced from Pikalytics, Smogon, RankedBoost, and/or Auto Build.
+dictionary sourced from Game8, Deltias Gaming, YouTube, Reddit, Pikalytics, Smogon,
+RankedBoost, and/or Auto Build.
 
 Currently supports **BDSP** (Brilliant Diamond / Shining Pearl), **LGPE** (Let's Go
-Pikachu / Eevee), and **PLA** (Pokémon Legends: Arceus). The architecture is designed
-to support additional games via per-game JSON build files.
+Pikachu / Eevee), **PLA** (Pokémon Legends: Arceus), and **PLZA** (Pokémon Legends: Z-A).
+The architecture is designed to support additional games via per-game JSON build files.
+
+> **Upgrading from 1.x:** Existing BDSP, LGPE, and PLA build JSONs load without changes.
+> The new `national` field added for PLZA regional-dex keys is optional and ignored by
+> earlier game configs.
 
 ---
 
@@ -105,7 +110,7 @@ left to the user). Toggles to **Uncheck All Competitive** to clear.
 | **Ability** | Sets ability from CSV or dictionary. Reverted if PKHeX marks the result illegal. Hidden in LGPE (no ability mechanic). |
 | **Nature** | Sets base Nature. Reverted if illegal — use Allow Illegal to force. |
 | **Stat Nature** | Sets Stat Nature (mint effect) independently of base Nature. Hidden in LGPE (not applicable). |
-| **Competitive EVs / AVs** | Applies EV spread (BDSP/PLA) or Awakening Values (LGPE) from dictionary. |
+| **Competitive EVs / AVs** | Applies EV spread (BDSP/PLA/PLZA) or Awakening Values (LGPE) from dictionary. |
 | **Competitive GVs** | Applies Grit Values (PLA only). Max GVs per stat derived from IVs: IV 31 → 7, IV 26–30 → 8, IV 20–25 → 9, IV 0–19 → 10. Applied alongside EVs for Pokémon HOME compatibility. |
 | **Competitive Moves** | Applies moveset from dictionary. PP set automatically. Tries the full 4-slot set atomically first; falls back to per-slot with warnings if the full set is rejected. |
 | **Set Level 100** | Sets the Pokémon to level 100. Enable before Hyper Train. |
@@ -133,25 +138,39 @@ Each Pokémon produces a single log line after apply:
 | 🟢 Green `✔` | All requested fields applied successfully |
 | 🟡 Gold `✔ … ⚠ skipped: …` | Some fields applied, others skipped with reason |
 | 🔴 Red `✘ … all skipped` | Nothing applied |
-| 🔵 Blue `—` | Egg or no mapping — skipped entirely |
+| 🔵 Blue `—` | Egg — skipped entirely |
+
+Species not in the mapping are silently counted in the `No mapping: N` summary line
+and do not produce individual log entries.
 
 ---
 
 ## Competitive Build Dictionary
 
-The plugin maintains a per-game JSON file (e.g. `builds/bdsp/bdsp_builds.json`) loaded
+The plugin maintains a per-game JSON file (e.g. `builds/plza/plza_builds.json`) loaded
 at runtime. Populate it via the **🔄 Refresh** button.
+
+### PLZA Merged Datasource
+
+For PLZA, builds from Game8, Deltias Gaming, YouTube, and Reddit are consolidated into
+`builds/plza/plza_builds.csv` — a version-controlled merged datasource that lives in
+Git alongside the plugin. It acts as a first-class source, containing reviewed and
+curated builds from multiple origins. On Refresh, it is loaded and merged with Auto
+Build fallbacks into `plza_builds.json`.
 
 ### Source Priority List
 
-The source panel shows three sources in priority order (top = highest):
-
-Available sources depend on the game:
+The source panel shows available sources in priority order (top = highest). Sources
+vary by game:
 
 | Source | Games | Coverage | Moves |
 |---|---|---|---|
+| **Game8** | PLZA | Competitive species | Top build per article |
+| **Deltias** | PLZA | Competitive species | Ranked PVP build |
+| **YouTube** | PLZA | Selected species | Manually curated builds |
+| **Reddit** | PLZA | Selected species | Community builds |
 | **Pikalytics** | BDSP, LGPE | All species (usage-based) | Top 4 by usage % |
-| **Smogon** | BDSP, LGPE | Competitively relevant species only | First listed set |
+| **Smogon** | BDSP, LGPE | Competitive species | First listed set |
 | **RankedBoost** | PLA | All species | Top moves by ranking |
 | **Auto Build** | All | All species and all obtainable alternate forms | Stat-derived (see below) |
 
@@ -161,14 +180,37 @@ and always last — it fills any species or form not covered by the checked sour
 Use **▲ / ▼** to reorder sources. Click **🔄 Refresh** to fetch and merge all checked
 sources in the displayed priority order.
 
-**Merge logic per species:**
-1. Highest-priority checked source with moves → use it
-2. Only one checked source has moves → use it directly
-3. Both checked sources have moves → highest priority wins
-4. No checked source covers the species → Auto Build
+### Multi-Build Species
 
-Each JSON entry records its origin in `_buildSource`:
-`"Pikalytics"`, `"Smogon"`, `"Pikalytics>Smogon"`, `"RankedBoost"`, or `"Auto Build"`.
+Species with builds from multiple sources show a **`*` prefix** in the Parsed Mappings
+grid (e.g. `*Greninja (Game8)`). Click the **⟳** button on any `*`-prefixed row to cycle
+through all available builds. The source shown in parentheses reflects the currently
+active build.
+
+---
+
+## Parsed Mappings Grid
+
+The Parsed Mappings grid shows one row per species (or per form for species with
+independent form builds). Additional columns (Nature, EVs, Moves) are shown when their
+corresponding checkboxes are enabled.
+
+### Species Search
+
+Type in the **search box** above the grid to filter rows by species name in real time.
+When **Competitive Moves** is on, the moves sub-row follows its parent species row in
+the filter results.
+
+### Battle Form Toggle (BF column)
+
+The **BF** column is a **Battle Form Toggle** — click it on a toggleable row to cycle
+between a Pokémon's base form and its battle form (Mega Evolution, Primal Reversion,
+etc.). The column header click expands or collapses all toggleable rows simultaneously.
+
+- Species with a toggleable form show **⟳** in the BF cell.
+- When toggled to the battle form, the applied build uses the Mega/Primal build from
+  the dictionary. The Pokémon in the box always stores the base form; the Mega build
+  is applied as the selected moveset/EV build regardless of the stored form.
 
 ---
 
@@ -203,18 +245,30 @@ For games where egg moves require breeding, any egg move that has no level-up/TM
 equivalent is written in `"EggMove|*Substitute"` format — the egg move is tried first
 at apply time and the substitute is used if the Pokémon's origin does not permit it.
 
+### PLZA Auto Build
+
+For PLZA, Auto Build additionally:
+
+- Filters moves through `PlzaLearnsetExcludes` (moves removed in Gen 9) and
+  `PlzaSpeciesMoveExcludes` (moves invalid for specific species in PLZA).
+- Respects `PlzaFormExclusions` to skip forms not present in the game (e.g. Ash-Greninja,
+  Zygarde mid-battle forms).
+- Sets **Plus Move flags** (`PA9.SetMovePlusFlag`) for moves mastered through level-up
+  when applied at level 100, using `PersonalInfo9ZA.PlusMoveIndexes`.
+
 ---
 
 ## Multi-Form Pokémon
 
-The applier matches form automatically and falls back to form 0 if no form-specific
-entry exists. Multi-form species use a JSON array with a `"form"` field per element.
+The applier matches form automatically. Resolution order:
+
+1. Exact species + form match in the mapping.
+2. Pokémon is base form (0): use any mapping entry for the species.
+3. Non-base form with no dedicated build in the game dict: fall back to form-0 mapping.
+4. **PLZA only** — non-base form with a dedicated build but no mapping entry (e.g. base form of a toggled Mega): use the next higher-numbered form in the mapping.
+
 Auto Build generates entries for all **obtainable** alternate forms independently, each
 with their own stat-derived ability, nature, EVs/AVs, and moves.
-
-The **BF** column in the preview grid is a **Battle Form Toggle** — click it to cycle
-through a species' available forms before applying. Hover the column header for a
-tooltip description.
 
 ---
 
@@ -230,6 +284,9 @@ tooltip description.
 
 `PKHeX.Core` is pulled automatically from NuGet — no manual setup needed.
 
+**Mac/Linux deploy script** — `deploy.sh` builds the project and copies the DLL and
+PLZA CSV to all configured PKHeX plugin directories automatically.
+
 ---
 
 ## File Layout
@@ -241,10 +298,11 @@ BattleBuilder/
 ├── BattleBuilderForm.cs        ← WinForms UI
 ├── BattleApplier.cs            ← applies mappings; all legality via PKHeX
 ├── PkmHelper.cs                ← game-specific PKM preparation (CP sync, HT flags, etc.)
-├── BuildsJson.cs               ← JSON engine + GameBuildsConfig + BDSPBuildsJson + LGPEBuildsJson
+├── BuildsJson.cs               ← JSON engine + GameBuildsConfig + per-game configs
 ├── MappingParser.cs            ← parses CSV into AbilityMapping objects
 ├── CompetitiveBuilds.cs        ← PokemonBuild record, EVSpread, role pools, registry
 ├── GenDetector.cs              ← detects save generation and game
+├── deploy.sh                   ← Mac build + multi-target deploy script
 ├── README.md
 ├── CHANGELOG.md
 └── builds/                     ← per-game data (runtime, not compiled)
@@ -254,6 +312,9 @@ BattleBuilder/
     │   └── lgpe_builds.json    ← populate via 🔄 Refresh
     ├── pla/
     │   └── pla_builds.json     ← populate via 🔄 Refresh
+    ├── plza/
+    │   ├── plza_builds.json    ← populate via 🔄 Refresh
+    │   └── plza_builds.csv     ← merged datasource (Game8, Deltias, YouTube, Reddit) — version-controlled in Git
     ├── swsh/  ← shell
     ├── hgss/  ← shell
     ├── oras/  ← shell
@@ -270,8 +331,7 @@ BattleBuilder/
 > The `builds/` folder is the plugin's runtime data directory, stored alongside the
 > DLL in your PKHeX `plugins/` folder. It holds one JSON file per game containing the
 > competitive build dictionary — abilities, natures, EV spreads, and movesets — loaded
-> at startup and populated via Refresh. The folder structure and empty shell JSON files
-> for all supported games are created automatically on first launch.
+> at startup and populated via Refresh.
 
 ---
 
@@ -316,7 +376,16 @@ BattleBuilder/
 }
 ```
 
-Multi-form species:
+**PLZA** — multi-build array with regional dex key and embedded national dex:
+```json
+"39": [
+  { "form": 0, "national": 670, "name": "Floette",                      "_buildSource": "Auto Build", ... },
+  { "form": 5, "national": 670, "name": "Eternal Flower Floette",        "_buildSource": "Game8", ... },
+  { "form": 6, "national": 670, "name": "Eternal Flower Floette (Mega)", "_buildSource": "Auto Build", ... }
+]
+```
+
+Multi-form species (all games):
 ```json
 "487": [
   { "form": 0, "name": "Giratina",          "_buildSource": "Auto Build", ... },
