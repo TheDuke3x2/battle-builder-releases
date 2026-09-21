@@ -1,14 +1,15 @@
 # Battle Builder — PKHeX Plugin
 
 A PKHeX plugin for bulk-applying competitive builds to Pokémon across save file boxes.
-Applies abilities, natures, stat natures, EVs/AVs, movesets, level, IVs, and hyper training —
-individually or all at once — using a mapping list paired with a live competitive build
-dictionary sourced from Game8, Deltias Gaming, YouTube, Reddit, Pikalytics, Smogon,
+Applies abilities, natures, stat natures, EVs/AVs/Stat Exp, movesets, level, IVs, and hyper
+training — individually or all at once — using a mapping list paired with a live competitive
+build dictionary sourced from Game8, Deltias Gaming, YouTube, Reddit, Pikalytics, Smogon,
 RankedBoost, and/or Auto Build.
 
-Currently supports **BDSP** (Brilliant Diamond / Shining Pearl), **LGPE** (Let's Go
-Pikachu / Eevee), **PLA** (Pokémon Legends: Arceus), and **PLZA** (Pokémon Legends: Z-A).
-The architecture is designed to support additional games via per-game JSON build files.
+Currently supports **RBY** (Pokémon Red / Blue / Yellow), **BDSP** (Brilliant Diamond /
+Shining Pearl), **LGPE** (Let's Go Pikachu / Eevee), **PLA** (Pokémon Legends: Arceus), and
+**PLZA** (Pokémon Legends: Z-A). The architecture is designed to support additional games
+via per-game JSON build files.
 
 > **Upgrading from 1.x:** Existing BDSP, LGPE, and PLA build JSONs load without changes.
 > The new `national` field added for PLZA regional-dex keys is optional and ignored by
@@ -18,7 +19,7 @@ The architecture is designed to support additional games via per-game JSON build
 
 ## Requirements
 
-- **PKHeX 26.03.06**
+- **PKHeX 26.03.06** or **26.05.05**
 - **.NET 10 Windows Desktop Runtime** (included with PKHeX)
 - **Windows**
 
@@ -107,15 +108,15 @@ left to the user). Toggles to **Uncheck All Competitive** to clear.
 
 | Option | What it does |
 |---|---|
-| **Ability** | Sets ability from CSV or dictionary. Reverted if PKHeX marks the result illegal. Hidden in LGPE (no ability mechanic). |
-| **Nature** | Sets base Nature. Reverted if illegal — use Allow Illegal to force. |
-| **Stat Nature** | Sets Stat Nature (mint effect) independently of base Nature. Hidden in LGPE (not applicable). |
-| **Competitive EVs / AVs** | Applies EV spread (BDSP/PLA/PLZA) or Awakening Values (LGPE) from dictionary. |
+| **Ability** | Sets ability from CSV or dictionary. Reverted if PKHeX marks the result illegal. Hidden in LGPE and RBY (no ability mechanic). |
+| **Nature** | Sets base Nature. Reverted if illegal — use Allow Illegal to force. Hidden in RBY (no natures in Gen 1). |
+| **Stat Nature** | Sets Stat Nature (mint effect) independently of base Nature. Hidden in LGPE and RBY (not applicable). |
+| **Competitive EVs / AVs / Stat Exp** | Applies EV spread (BDSP/PLA/PLZA), Awakening Values (LGPE), or Stat Exp (RBY, labelled "Competitive Stat Exp") from dictionary. |
 | **Competitive GVs** | Applies Grit Values (PLA only). Max GVs per stat derived from IVs: IV 31 → 7, IV 26–30 → 8, IV 20–25 → 9, IV 0–19 → 10. Applied alongside EVs for Pokémon HOME compatibility. |
 | **Competitive Moves** | Applies moveset from dictionary. PP set automatically. Tries the full 4-slot set atomically first; falls back to per-slot with warnings if the full set is rejected. |
 | **Set Level 100** | Sets the Pokémon to level 100. Enable before Hyper Train. |
 | **Max IVs** | Sets all IVs to 31, skipping stats already covered by Hyper Training. |
-| **Hyper Train** | Applies Hyper Training flags directly. Requires level 100. |
+| **Hyper Train** | Applies Hyper Training flags directly. Requires level 100. Hidden in RBY (no Hyper Training in Gen 1). |
 | **Allow Illegal** | Bypasses all PKHeX legality checks for every field. |
 
 **Mutual exclusions:** Enabling Hyper Train disables Max IVs (and vice versa), since
@@ -128,6 +129,13 @@ both aim to maximise stats but via different mechanics.
 Every change is gated by **PKHeX's own `LegalityAnalysis`** — no custom legality logic
 is added. If a change would make the Pokémon illegal, it is reverted and a warning is
 logged. **Allow Illegal** bypasses all checks.
+
+**Already-illegal Pokémon:** a Pokémon that was illegal *before* Battle Builder touched it
+(for example a Mew whose origin matches no legal encounter) would otherwise reject every
+change. The applier records the Pokémon's invalid checks up front and accepts a change as
+long as it introduces **no new** invalid checks beyond that baseline — so a genuinely
+illegal move (which adds its own "Invalid Move" line) is still rejected, but pre-existing
+problems no longer block unrelated changes. Fully legal Pokémon behave exactly as before.
 
 ### Log output
 
@@ -152,11 +160,11 @@ at runtime. Populate it via the **🔄 Refresh** button.
 
 ### PLZA Merged Datasource
 
-For PLZA, builds from Game8, Deltias Gaming, YouTube, and Reddit are consolidated into
-`builds/plza/plza_builds.csv` — a version-controlled merged datasource that lives in
-Git alongside the plugin. It acts as a first-class source, containing reviewed and
-curated builds from multiple origins. On Refresh, it is loaded and merged with Auto
-Build fallbacks into `plza_builds.json`.
+For PLZA, builds from Game8, Deltias Gaming, YouTube, and Reddit are consolidated into a
+single curated CSV hosted as a GitHub Gist and fetched fresh on every Refresh (there is no
+local CSV). It acts as a first-class source, containing reviewed and curated builds from
+multiple origins. On Refresh, it is fetched and merged with Auto Build fallbacks into
+`plza_builds.json`.
 
 ### Source Priority List
 
@@ -169,8 +177,8 @@ vary by game:
 | **Deltias** | PLZA | Competitive species | Ranked PVP build |
 | **YouTube** | PLZA | Selected species | Manually curated builds |
 | **Reddit** | PLZA | Selected species | Community builds |
-| **Pikalytics** | BDSP, LGPE | All species (usage-based) | Top 4 by usage % |
-| **Smogon** | BDSP, LGPE | Competitive species | First listed set |
+| **Pikalytics** | BDSP, LGPE, RBY | All species (usage-based) | Top 4 by usage % |
+| **Smogon** | BDSP, LGPE, RBY | Competitive species | First listed set |
 | **RankedBoost** | PLA | All species | Top moves by ranking |
 | **Auto Build** | All | All species and all obtainable alternate forms | Stat-derived (see below) |
 
@@ -245,6 +253,69 @@ For games where egg moves require breeding, any egg move that has no level-up/TM
 equivalent is written in `"EggMove|*Substitute"` format — the egg move is tried first
 at apply time and the substitute is used if the Pokémon's origin does not permit it.
 
+### Gen 1 (RBY) Auto Build
+
+Gen 1 plays very differently, so RBY has its own move-selection logic on top of the shared
+role classification. Everything below applies only to RBY.
+
+**Stats and fields.** There are no natures, abilities, or Hyper Training in Gen 1. Every
+build sets all six **Stat Exp** values to 65535 (Gen 1 has no total cap), and the UI hides
+the Nature, Stat Nature, and Hyper Train options. DVs are handled by the existing IV
+options. Roles are classified from base stats as usual, then adjusted (below).
+
+**Physical/special is per-type, not per-move.** Fire, Water, Grass, Electric, Psychic, Ice,
+and Dragon are special; every other type is physical. PKHeX reports Gen 1 types in the
+ROM's raw byte encoding, so they are normalized before use. Move types come from PKHeX's
+Gen 1 data (e.g. Bite and Gust are Normal in Gen 1), and same-type duplicate checks use
+those real types.
+
+**Mixed Attacker.** A sweeper or bulky-attacker role whose Attack and Special are within
+10% of each other (Charizard, Charmander, Pikachu, Weepinbell…) becomes **Mixed Attacker**.
+
+**Learnable pool.** The union of Red/Blue *and* Yellow level-up and TM/HM data, plus:
+
+- everything learnable by **every pre-evolution** (Gen 1 evolution never removes moves —
+  e.g. Victreebel keeps Weepinbell's Acid);
+- each species' **starting moves** from PKHeX's base-stat data, which the level-up tables
+  omit (e.g. Tentacool/Tentacruel's Acid);
+- fixed movesets for Caterpie, Metapod, Weedle, Kakuna, and Ditto;
+- **Surf on Pikachu/Raichu**, which PKHeX's legality check accepts even though the TM
+  compatibility table does not list it.
+
+**Move order** (offensive roles): STAB (scanned from the real learnset) → sleep move +
+Dream Eater → Explosion → Leech Seed/Toxic → Recover/Soft-Boiled → Counter → staple →
+Coverage → attack fill → support (Thunder Wave, Agility, Seismic Toss, Reflect) →
+universal pool. Walls take a sleep or paralysis move first, then one STAB attack matching
+their category, then role pools. Bulky roles take Thunder Wave (and Seismic Toss for very
+low-Attack species like Chansey) right after STAB.
+
+**Ranking adjustments** (Gen 1 base power is a poor proxy in a few cases):
+
+- Two-turn charge moves (Solar Beam, Skull Bash, Razor Wind, Sky Attack) are last resort.
+- Thunder and Hydro Pump take a small penalty for accuracy; Body Slam ranks above
+  Double-Edge (100 BP in Gen 1), which ranks above Hyper Beam.
+- Hyper Beam is allowed for attackers (it only recharges if the target survives) but never
+  for walls. Fixed-damage Dragon Rage and Sonic Boom are never chosen.
+- Type dedup: at most one damaging move per real type, except Normal (Double-Edge beside
+  Body Slam is allowed).
+- A physical sweeper whose only physical damage is Normal-type (Tauros, Dragonite,
+  Gyarados) may take up to two special coverage moves, preferring Ice, Electric, then Water.
+
+**Status and setup rules.**
+
+- One ailment per build (only one status can be active). Walls prefer sleep → paralysis →
+  poison; attackers that learn a sleep move take one, and **Dream Eater** is only added
+  alongside a sleep move.
+- **Rest** is skipped when Recover, Soft-Boiled, or a drain move is learnable (no berries
+  to wake early in Gen 1), is never given to pure sweepers, and is only added when the
+  build already has a sleep or paralysis source (a sleep move, Thunder Wave, Stun Spore,
+  Glare, or Body Slam/Lick/Thunderbolt/Thunder) so the two turns of downtime are affordable.
+- At most one drain move per build (Mega Drain over Leech Life).
+- **Swords Dance / Amnesia** require real own-type damage in the category they boost;
+  Amnesia leads the special-sweeper staple pool.
+- One self-KO move at most (Explosion, else Self-Destruct), never alongside Rest/Recover,
+  and not on high-HP tanks (HP ≥ 100, e.g. Snorlax, Chansey).
+
 ### PLZA Auto Build
 
 For PLZA, Auto Build additionally:
@@ -284,8 +355,8 @@ with their own stat-derived ability, nature, EVs/AVs, and moves.
 
 `PKHeX.Core` is pulled automatically from NuGet — no manual setup needed.
 
-**Mac/Linux deploy script** — `deploy.sh` builds the project and copies the DLL and
-PLZA CSV to all configured PKHeX plugin directories automatically.
+**Mac/Linux deploy script** — `deploy.sh` builds the project and copies the DLL (plus the
+legality reference docs) to all configured PKHeX plugin directories automatically.
 
 ---
 
@@ -313,8 +384,9 @@ BattleBuilder/
     ├── pla/
     │   └── pla_builds.json     ← populate via 🔄 Refresh
     ├── plza/
-    │   ├── plza_builds.json    ← populate via 🔄 Refresh
-    │   └── plza_builds.csv     ← merged datasource (Game8, Deltias, YouTube, Reddit) — version-controlled in Git
+    │   └── plza_builds.json    ← populate via 🔄 Refresh
+    ├── rby/
+    │   └── rby_builds.json     ← populate via 🔄 Refresh
     ├── swsh/  ← shell
     ├── hgss/  ← shell
     ├── oras/  ← shell
@@ -324,8 +396,7 @@ BattleBuilder/
     ├── sm/    ← shell
     ├── rse/   ← shell
     ├── frlg/  ← shell
-    ├── gsc/   ← shell
-    └── rby/   ← shell
+    └── gsc/   ← shell
 ```
 
 > The `builds/` folder is the plugin's runtime data directory, stored alongside the

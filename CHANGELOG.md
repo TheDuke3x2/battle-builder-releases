@@ -4,6 +4,36 @@ All notable changes to Battle Builder are documented here.
 
 ---
 
+## [2.1.1]
+
+Maintenance release. 2.1.0 was never published, so 2.1.1 ships everything listed under 2.1.0 below.
+
+### Changed
+
+- **Internal refactor (no behavior change)** - Auto Build output is identical to 2.1.0 for every game (verified with a regression harness under `tools/`). The move-selection engine moved out of `BuildsJson` into `FallbackMoveBuilder` (split into offense/defense/last-resort/post-check passes), Gen 1 data and rules moved into `Gen1Rules`, and `BuildsJson` was split into partial files.
+
+## [2.1.0]
+
+### Added
+
+- **Gen 1 (RBY) support** — Pokémon Red / Blue / Yellow saves are detected and supported, with a full Auto Build for all 151 species. Sources: **Pikalytics**, **Smogon** (gen1ou), and Auto Build.
+  - **Stat Exp** replaces EVs (all six stats set to 65535, no total cap); the UI relabels the option "Competitive Stat Exp" and hides Nature, Stat Nature, and Hyper Train (none exist in Gen 1).
+  - **Mixed Attacker** role — sweeper and bulky roles whose Attack and Special are within 10% (Charizard, Pikachu, Weepinbell…) get a blended physical/special build. Role labels now show in the moves row, e.g. `Moves (Special Wall)`, for every game.
+  - **Gen 1 learnable pool** — union of Red/Blue and Yellow level-up + TM data, plus every pre-evolution's moves (Gen 1 evolution never removes moves), each species' starting moves from PKHeX's base-stat data (e.g. Tentacool's Acid), fixed movesets for Caterpie/Metapod/Weedle/Kakuna/Ditto, and Surf on Pikachu/Raichu.
+  - **Gen 1 move-selection rules** — see the README's *Gen 1 (RBY) Auto Build* section: per-type physical/special split, real Gen 1 move types, charge-move and accuracy ranking adjustments, one ailment per build (sleep > paralysis > poison for walls), Dream Eater only with a sleep move, Rest skipped when Recover/Soft-Boiled/a drain move exists and only kept with a sleep or paralysis source, one drain move, one self-KO move (not on high-HP tanks), Body Slam > Double-Edge > Hyper Beam, Thunder Wave/Seismic Toss/Agility/Reflect support, and limited special coverage for Normal-only physical sweepers.
+
+### Improved
+
+- **Applying to already-illegal Pokémon** — a Pokémon that was illegal before Battle Builder touched it (e.g. a Mew with no matching encounter) no longer rejects every change. A change is now accepted as long as it introduces no *new* invalid checks beyond the Pokémon's baseline; a genuinely illegal move is still rejected. Fully legal Pokémon behave as before. Applies to all games.
+- **Post-check for defensive roles** — the "guarantee at least one attack" fallback no longer mistakes status moves that appear in the type-coverage table (e.g. Rest) for attacks, fixing all-status walls in every game.
+- **Moves label** — the Parsed Mappings grid now actually paints the `Moves (…)` label; a custom cell painter was previously overwriting it with plain "Moves".
+
+### Documentation
+
+- README updated for Gen 1, Stat Exp, the already-illegal apply behavior, and the PLZA merged datasource, which is fetched from a Gist on every Refresh rather than shipped as a local CSV.
+
+---
+
 ## [2.0.0]
 
 ### Added
