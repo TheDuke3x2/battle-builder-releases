@@ -113,7 +113,7 @@ left to the user). Toggles to **Uncheck All Competitive** to clear.
 | **Stat Nature** | Sets Stat Nature (mint effect) independently of base Nature. Hidden in LGPE and RBY (not applicable). |
 | **Competitive EVs / AVs / Stat Exp** | Applies EV spread (BDSP/PLA/PLZA), Awakening Values (LGPE), or Stat Exp (RBY, labelled "Competitive Stat Exp") from dictionary. |
 | **Competitive GVs** | Applies Grit Values (PLA only). Max GVs per stat derived from IVs: IV 31 → 7, IV 26–30 → 8, IV 20–25 → 9, IV 0–19 → 10. Applied alongside EVs for Pokémon HOME compatibility. |
-| **Competitive Moves** | Applies moveset from dictionary. PP set automatically. Tries the full 4-slot set atomically first; falls back to per-slot with warnings if the full set is rejected. |
+| **Competitive Moves** | Applies moveset from dictionary. Each move gets 3 PP Ups (max PP) with PP fully refilled (skipped in Legends: Arceus, which has no PP Ups; reverted with a warning if PKHeX rejects it). Tries the full 4-slot set atomically first; falls back to per-slot with warnings if the full set is rejected. |
 | **Set Level 100** | Sets the Pokémon to level 100. Enable before Hyper Train. |
 | **Max IVs** | Sets all IVs to 31, skipping stats already covered by Hyper Training. |
 | **Hyper Train** | Applies Hyper Training flags directly. Requires level 100. Hidden in RBY (no Hyper Training in Gen 1). |

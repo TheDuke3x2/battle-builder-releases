@@ -4,6 +4,12 @@ All notable changes to Battle Builder are documented here.
 
 ---
 
+## [2.1.2]
+
+### Added
+
+- **Max PP** - applying Competitive Moves now also gives every move 3 PP Ups and refills PP to the maximum. Skipped in Legends: Arceus (no PP Ups); in other games the change is reverted with a warning if PKHeX rejects it.
+
 ## [2.1.1]
 
 Maintenance release. 2.1.0 was never published, so 2.1.1 ships everything listed under 2.1.0 below.
