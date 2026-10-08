@@ -4,6 +4,72 @@ All notable changes to Battle Builder are documented here.
 
 ---
 
+## [2.4.0]
+
+### Added
+
+- **Gen 3 (FireRed/LeafGreen) support** — Battle Builder now detects FRLG saves, with a full Auto Build for all 386 species. Sources: **Pikalytics**, **Smogon**, and Auto Build.
+  - **Learnset discovery** — FRLG level-up, TM/HM, egg moves, and every FRLG and Emerald move tutor (Emerald tutor moves are legal on FRLG Pokémon by trade).
+  - **Gen 3 physical/special split by type** — Normal, Fighting, Flying, Poison, Ground, Rock, Bug, Ghost and Steel are physical; Fire, Water, Grass, Electric, Psychic, Ice, Dragon and Dark are special. Roles, natures, EVs and move choices all follow it: sweepers take the category that hits harder, walls attack in their stronger category with a nature that lowers the stat they don't use, and Mixed Attackers split EVs by their moves and never lower an attacking stat or Speed.
+  - **Gen 3 move ranking** — Gen 3 base powers, with drawbacks priced in (two-turn moves, recoil on walls, Overheat, delayed attacks, low accuracy); weak STAB (Fury Cutter, Twister) and weak filler aren't picked.
+  - **Set quality** — Rest is always covered (Sleep Talk, a sleep move or Substitute) and Rest + Sleep Talk sets attack with their other slots; at most two HP-recovery sources; no boost for a stat the set doesn't attack with; walls carry Rapid Spin, take their second STAB or coverage over Roar, and skip Water Spout/Eruption; egg-move fallbacks never duplicate an attack type.
+  - **Typed Hidden Power** — chosen to hit what walls the set's STAB (Zapdos: Ice, Charizard: Grass), and only taught when its IVs can be set; the IVs are set for the type at 70 power.
+  - **Species sets** — the defining Gen 3 sets where the general rules can't assemble them: Kyogre Water Spout/Thunder, Groudon Eruption, Cloyster/Forretress/Skarmory Spikes, Snorlax Curse/Rest/Sleep Talk, Breloom Spore/Swords Dance, Celebi Calm Mind/Recover, Wobbuffet Counter/Mirror Coat, Chansey/Blissey Seismic Toss, a sketched Smeargle set, and more.
+- **Nature and ability on FRLG** — Gen 3 stores both in the PID, so changing either finds a new PID that keeps gender, shininess and form. Bred Pokémon change directly; wild and static Pokémon are re-rolled at their original encounter for the best IVs it allows. Wild-caught and static shinies, in-game trades and event Pokémon are left as-is to preserve legality.
+- **Egg Conversion (FRLG)** — optionally rebuilds a wild-caught Pokémon as egg-hatched, allowing egg moves and full 31 IVs. Off by default, behind a confirmation.
+- **Allow Illegal on FRLG** — also changes nature and ability on Pokémon blocked for legality (trades, events, shinies).
+- **Allow Hidden Power Changes** extends to FRLG, and **Check All Competitive** now includes it (FRLG shows one combined confirmation for Nature, Ability and Egg Conversion).
+- **Max friendship for Return** (and none for Frustration), Gen 2 and up.
+
+### Fixed
+
+- Per-game options weren't restored when the plugin reopened (they were read before the window was shown).
+- The FRLG options row pushed the Apply button out of the scroll area.
+- Sketch no longer gets PP Ups.
+- A typed Hidden Power that can't be taught (in-game trade IVs are fixed) falls back to another of the Pokémon's original moves instead of leaving the slot empty.
+
+### Changed
+
+- FRLG joins the Auto Build regression harness (`tools/regress.ps1`).
+- Confirmation text notes that nothing is permanent until the save is exported.
+
+## [2.3.0]
+
+### Added
+
+- **Gen 2 (Gold/Silver/Crystal) support** — Battle Builder now detects GSC saves, with a full Auto Build for all 251 species. Sources: **Pikalytics**, **Smogon**, and Auto Build.
+  - **Learnset discovery** — union of Gold/Silver and Crystal level-up moves, TM/HM compatibility, Crystal's move tutor (Flamethrower/Thunderbolt/Ice Beam), and egg moves. A pre-evolution's level-up moves normally carry forward on evolution, except for Gen 2's baby Pokémon (Pichu, Cleffa, Igglybuff, Tyrogue, Smoochum, Elekid, Magby) — most specimens of their evolved forms were caught directly rather than bred through the baby stage, so those moves are treated as egg moves instead of assumed freely learnable. Hyper Beam (always recharges in Gen 2) and Hidden Power (type depends on DVs) are excluded from the learnable pool entirely.
+  - **Move-selection engine** shares the same offense/defense/last-resort pass structure introduced for RBY, with Gen 2-specific staple pools: Rest + Sleep Talk, Curse, Spikes, and Roar for defensive roles; Return, Earthquake, and the elemental beams for attackers.
+  - **Fixed movesets** for Magikarp (Flail/Tackle/Splash), Ditto (Transform), and Unown (Hidden Power only, excluded from every other species' pool). Smeargle gets a dedicated Spikes/Substitute/Baton Pass/Thunder Wave support set — Sketch technically opens its whole movepool, but its stats (Atk 20, SpA 20) rule out being an actual attacker.
+  - **Purpose-matched egg-move substitutes** — an attacking egg move substitutes for the best learnable attack of the same category in a type the build doesn't already cover, instead of the first STAB-pool entry (which often just duplicated a move already in the set). A status egg move (Swords Dance, Synthesis, Leech Seed, Spikes, ...) substitutes for the closest-purpose learnable move instead of an unrelated attack.
+- **Allow Hidden Power Changes** — for a build that specifies a Hidden Power type (Smogon/Pikalytics commonly do), optionally sets the DVs needed to hit that exact type at maximum power (70), for the specific Pokémon Hidden Power is actually being set on. Overrides Max IVs' own DV choice for that Pokémon only. Off by default, behind a confirmation dialog: Gen 2 derives gender and shininess directly from DVs with no separate stored flag, so this can change either as a side effect.
+- **Allow Egg Encounter Edit** — optionally clears Met Level/Location/Catch Data so an egg-only move can be legal on an individual whose actual encounter says it wasn't bred. GSC only, off by default, behind a confirmation dialog. Works for a move from any source (Auto Build, Smogon, Pikalytics) that turns out to need it, not just ones Auto Build's own generation pass already flagged as egg-only.
+
+### Fixed
+
+- **Max IVs on Gen 1/2** compared DVs against the modern 31 cap instead of their real 15 cap, and tried to write IV_HP directly even though it's derived from the other DVs in these games — it never recognized a DV-game Pokémon as already maxed, so reapplying kept reporting changes forever. Now caps at 15, skips the derived HP DV, and settles after one apply.
+- **"All moves skipped (illegal)" warning** fired whenever nothing changed on a given pass, even when most slots already held the intended move from a previous run. Now only fires when none of the four slots hold an intended (primary or substitute) move.
+- **Mapping List textbox** was invisible at every window size — a chain of GroupBox AutoSize collapse, a wrapping format-hint label bloating its toolbar row, and `Dock=Fill` being fundamentally incompatible with `AutoScroll`'s overflow detection. Resolved with fixed-pixel row heights inside a proper scroll host.
+- **Per-species build source selection** was keyed by raw list position — a Refresh rebuilds each species' build list from whichever sources currently have data for it, so a saved index could end up silently pointing at a different source after the list's composition or order changed. Now keyed by the build's own source name (`BuildSourceBySpecies`), so a Refresh can't misattribute a saved pick; existing index-based selections reset once on upgrade.
+- **A duplicate recovery move** (e.g. both Rest and Moonlight on the same build) could end up in an Auto Build set on any game, since the role pools deliberately list several recovery options together and nothing capped the pick at one. `TryAdd` and the final "any learnable move" fallback pass are both capped now.
+- **Rest + Sleep Talk quality** — an ailment move (Sleep Powder, Toxic, Will-O-Wisp, ...) or zero real attacks alongside Rest + Sleep Talk defeated the pairing's whole point (Sleep Talk calls a random move from the set while asleep). Now capped to one recovery move plus at least one real attack, and the "pair Sleep Talk with Rest when learnable" rule — previously Gen 2-only — applies to every game.
+- **Swords Dance/Amnesia's "does this species have real own-type damage to boost" check** lived only in `TryAdd`; the final fallback pass built its move list directly and could in principle bypass it. Closed for consistency, though no case of it actually happening was found in current data.
+- **Max IVs on Gen 2 Unown** always maxed every DV to 15, which always produces the 'Z' letter form (Unown's form is computed live from its DVs, not stored separately). Now brute-forces the DV combination that maximizes DVs while keeping the individual's actual letter.
+- **Reapplying moves to an already-correct-but-still-illegal Gen 2 Pokémon** (e.g. an egg move present but the encounter never got converted to bred) reported no diff, since the moves already matched. Rerunning with Allow Egg Encounter Edit now catches this case and fixes the encounter even when no move slot changes.
+- **Allow Illegal let a naive move write "succeed" and be reported as fixed** even when the written moveset was still genuinely illegal, because the pre-existing baseline-tolerance check only compares generic error text and `AllowIllegal` short-circuited the legality check entirely. Both the primary and substitute move-write passes now additionally require every move slot to independently check out under a real (non-baseline, non-`AllowIllegal`) legality analysis before accepting a write; the final per-slot fallback is unchanged and remains the genuine last resort.
+- **Legality checks used whichever save was last loaded, not the one actually being applied to** — Battle Builder never told PKHeX.Core which save's era (real Gen 1/2 cartridge vs. Virtual Console) was in play, so a check that depends on it (e.g. Stadium's move relearner, cartridge-only) could silently use the wrong answer. Now synced from the save being applied to on every Apply run.
+
+### Changed
+
+- GSC joins the automated Auto Build regression harness (`tools/regress.ps1`), alongside BDSP/LGPE/PLA/PLZA/RBY.
+- Added `BuildsJson.RegenerateAutoBuildEntries` — refreshes only a game's Auto Build entries in place, leaving Pikalytics/Smogon/other sources' entries untouched. Used to roll an Auto Build fix into already-merged live data without a full network Refresh (which re-fetches and reshuffles every source, not just Auto Build).
+
+## [2.2.0]
+
+### Added
+
+- **Persisted settings** - the Parsed Sources checklist (checked state and priority order), the apply-option checkboxes, the box range, each species' selected build (for species with more than one source), and each species' toggled form (e.g. a Mega Evolution) are now saved to `builds/settings.json` and restored automatically when the plugin reopens. Saved per game family (Red/Blue/Green/Yellow share one set of settings, Gold/Silver/Crystal share another) rather than per individual cartridge.
+
 ## [2.1.2]
 
 ### Added
