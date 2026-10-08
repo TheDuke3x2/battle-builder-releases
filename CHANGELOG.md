@@ -4,6 +4,17 @@ All notable changes to Battle Builder are documented here.
 
 ---
 
+## [2.4.1]
+
+### Fixed
+
+- **Typed Hidden Power on GSC** — a build's "Hidden Power <Type>" was taught even when its DVs weren't set (Allow Hidden Power Changes off, or a DV change that isn't legal), leaving whatever type the Pokémon's DVs happened to give. It's now only taught when the DVs are set, as in FRLG; otherwise the slot keeps its previous move, or another move the Pokémon knew, with a warning naming the type.
+
+### Changed
+
+- **Internal refactor (no behavior change)** — Gen 3 code moved into its own files (`FallbackMoveBuilder.Gen3.cs`, `BattleApplier.Gen3.cs`), with all Gen 3 per-species data in `Gen3Species.cs` and shared helpers replacing repeated logic. Auto Build output and apply results are identical for every game (both regression harnesses).
+- Added an apply regression harness (`tools/apply-regress.ps1`): applies build data to local save fixtures with several option profiles and compares the resulting Pokémon and apply log to a baseline.
+
 ## [2.4.0]
 
 ### Added
