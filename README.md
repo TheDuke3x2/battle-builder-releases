@@ -6,9 +6,9 @@ training — individually or all at once — using a mapping list paired with a 
 build dictionary sourced from Game8, Deltias Gaming, YouTube, Reddit, Pikalytics, Smogon,
 RankedBoost, and/or Auto Build.
 
-Currently supports **RBY** (Pokémon Red / Blue / Yellow), **BDSP** (Brilliant Diamond /
-Shining Pearl), **LGPE** (Let's Go Pikachu / Eevee), **PLA** (Pokémon Legends: Arceus), and
-**PLZA** (Pokémon Legends: Z-A). The architecture is designed to support additional games
+Currently supports **RBY** (Pokémon Red / Blue / Yellow), **GSC** (Gold / Silver / Crystal),
+**FRLG** (FireRed / LeafGreen), **BDSP** (Brilliant Diamond / Shining Pearl), **LGPE** (Let's Go
+Pikachu / Eevee), **PLA** (Pokémon Legends: Arceus), and **PLZA** (Pokémon Legends: Z-A). The architecture is designed to support additional games
 via per-game JSON build files.
 
 > **Upgrading from 1.x:** Existing BDSP, LGPE, and PLA build JSONs load without changes.
@@ -387,6 +387,10 @@ BattleBuilder/
     │   └── plza_builds.json    ← populate via 🔄 Refresh
     ├── rby/
     │   └── rby_builds.json     ← populate via 🔄 Refresh
+    ├── gsc/
+    │   └── gsc_builds.json     ← populate via 🔄 Refresh
+    ├── frlg/
+    │   └── frlg_builds.json    ← populate via 🔄 Refresh
     ├── swsh/  ← shell
     ├── hgss/  ← shell
     ├── oras/  ← shell
@@ -394,9 +398,7 @@ BattleBuilder/
     ├── dppt/  ← shell
     ├── xy/    ← shell
     ├── sm/    ← shell
-    ├── rse/   ← shell
-    ├── frlg/  ← shell
-    └── gsc/   ← shell
+    └── rse/   ← shell
 ```
 
 > The `builds/` folder is the plugin's runtime data directory, stored alongside the
