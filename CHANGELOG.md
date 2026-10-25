@@ -4,6 +4,44 @@ All notable changes to Battle Builder are documented here.
 
 ---
 
+## [2.5.1]
+
+### Added
+
+- **HOME-transferable (FRLG)** — Pokémon HOME refuses FireRed/LeafGreen Pokémon that hold an item or know an HM. With this on, Apply replaces each HM with the build's alternative or the best legal non-HM move (Surf → Hydro Pump, Fly → Aerial Ace, …) and removes held items, logging each swap (`Surf→Hydro Pump (HOME)`). It's ticked automatically for a Nintendo Switch Online save (`FireRed_e.sav`, `LeafGreen_e.sav`); the command-line apply takes `-HomeTransfer yes|no`.
+
+### Changed
+
+- **Matching Poké Ball on Switch saves** — a Nintendo Switch Online FireRed/LeafGreen save can't trade with Ruby/Sapphire/Emerald, so only FireRed/LeafGreen's own balls (Poké, Great, Ultra, Master, Safari, Premier) are offered or set; Net, Dive, Nest, Repeat, Timer and Luxury are left out. Origin Game Conversion is unavailable on these saves.
+
+### Fixed
+
+- **Colosseum/XD Pokémon on Switch saves** — PKHeX rules out every Colosseum/XD Pokémon on a Switch Online save (no GameCube link), so their re-roll could never succeed and searched to its cap: minutes per box. Their re-rolls are now judged by the GBA cartridge's rules (logged "GBA rules: Colosseum/XD"), taking seconds as on a GBA save.
+- **Command-line apply on a .srm cartridge save** — a raw FireRed/LeafGreen save (which doesn't say which of the two it is) was taken for Ruby/Sapphire/Emerald and nothing applied.
+
+## [2.5.0]
+
+### Added
+
+- **Matching Poké Ball (FRLG)** — a new Poké Ball group under Box Range. With **Matching Poké Ball** on, the Parsed Mappings grid gets a **Recommended Ball** column (from the *Legal Matching Pokéballs 2.1* sheet), and Apply puts each Pokémon in its selected ball where its encounter allows it.
+  - Only balls the species can legally be caught in on the save's own game are offered; **N/A** when there's none. With Allow Illegal, every recommended ball is offered.
+  - Click the ball to cycle the recommended balls; **▾** or right-click lists the other legal balls (any ball with Allow Illegal) and **Off** (keep the Pokémon's current ball). Normal and shiny balls are chosen separately and remembered per species.
+  - A hatched Pokémon whose ball needs a catch is rebuilt as a catch in the save's game, unless the egg route gives it better nature, ability or stats; those are kept egg-hatched and logged (⇆) with the reason.
+  - **Origin Game Conversion** — also offers balls only another Game Boy Advance game allows (marked ↺), and on Apply moves the Pokémon to that game's encounter for its ball (e.g. Emerald's Safari Zone for a Safari Ball Pineco). Trainer, nickname, level, EVs and item stay; origin game, met data, PID and IVs change.
+- **Pokémon sprites** (RBY, GSC, FRLG) — a Pokémon column after Dex # shows each species' normal and shiny sprite for the save's own game, read from a local sprite folder. Click the header to cycle every row through the game's views (Gen 1 grayscale front/back first, then color); the header names the current view.
+- **Colosseum/XD Shadow Pokémon (FRLG saves)** — Nature, Max IVs and Hidden Power now re-roll Shadow Pokémon at their own encounter, like FRLG wild and static Pokémon: the best IVs their game can give with the build's nature, keeping the Shadow team locks, trainer, met data and ball. The Japanese e-Reader Shadow Pokémon are left as-is (fixed nature and IVs).
+- **Command-line apply** — `tools/apply-save.ps1` applies Battle Builder to a save without PKHeX, using the app's selected builds, balls and settings, with `-DryRun`, box range, party and option overrides. It backs the save up first and refuses to write if any Pokémon's species would change.
+
+### Changed
+
+- Dex # comes before Species, and click-to-sort is off on the Parsed Mappings columns.
+- The Apply confirmation lists every selected option.
+
+### Fixed
+
+- **FRLG re-roll devolving** — re-rolling an evolved Pokémon at its encounter no longer turns it back into its pre-evolution.
+- **Repeat Apply on FRLG** — a second Apply no longer changes Pokémon that were already applied (it re-rolled them to new IVs and PIDs with no gain).
+
 ## [2.4.1]
 
 ### Fixed
