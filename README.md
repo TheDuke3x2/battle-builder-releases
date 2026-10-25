@@ -69,12 +69,19 @@ Provide a CSV-style list mapping species to the values you want applied.
 
 **Format:**
 ```
-# Species[, Ability[, Nature[, Stat Nature]]]
+# Species[, Ability[, Nature[, Stat Nature[, Ball[, Shiny Ball]]]]]
 Garchomp                         # species only — uses full dictionary build
 Alakazam, Magic Guard            # override ability only
 Gengar, Cursed Body, Timid       # override ability + nature
 445,, Jolly, Jolly               # skip ability, set nature + stat nature
+Bulbasaur, Master Ball           # matching Poké Ball (Gen 3+)
+Pikachu, Static, Timid, Shiny Premier Ball   # "Shiny" marks the shiny coloring's ball
 ```
+
+A ball can go in its own column (5th for the normal coloring, 6th for the shiny one) or in any
+column after Species, since no ability or nature name ends in "Ball". Any ball the game has is
+accepted — not just the recommended ones; one it doesn't have (a Friend Ball in FRLG) is skipped
+with a warning. A mapped ball is shown first in the Ball column, highlighted like other mapped values.
 
 | Column | Notes |
 |---|---|
@@ -117,10 +124,41 @@ left to the user). Toggles to **Uncheck All Competitive** to clear.
 | **Set Level 100** | Sets the Pokémon to level 100. Enable before Hyper Train. |
 | **Max IVs** | Sets all IVs to 31, skipping stats already covered by Hyper Training. |
 | **Hyper Train** | Applies Hyper Training flags directly. Requires level 100. Hidden in RBY (no Hyper Training in Gen 1). |
+| **HOME-transferable** | FRLG only. Pokémon HOME won't take a FireRed/LeafGreen Pokémon that holds an item or knows an HM (Cut, Fly, Surf, Strength, Flash, Rock Smash, Waterfall, Dive). After the build, each HM is replaced with the build's listed alternative for that slot, else the best legal move the Pokémon can learn (Surf/Waterfall/Dive → Hydro Pump, Crabhammer, Water Pulse, …; Fly → Aerial Ace, Drill Peck, …; then Return, Body Slam, …), and the held item is removed. Logged as e.g. `Surf→Hydro Pump (HOME)`. Ticked automatically when the save is a Nintendo Switch Online save (`FireRed_e.sav`, `LeafGreen_e.sav`). |
 | **Allow Illegal** | Bypasses all PKHeX legality checks for every field. |
 
 **Mutual exclusions:** Enabling Hyper Train disables Max IVs (and vice versa), since
 both aim to maximise stats but via different mechanics.
+
+### Poké Ball (FRLG)
+
+The **Poké Ball** group sits under Box Range.
+
+| Option | What it does |
+|---|---|
+| **Matching Poké Ball** | Shows the **Recommended Ball** column and, on Apply, puts each Pokémon in its selected ball where its encounter allows it. Off or N/A keeps the Pokémon's ball. |
+| **Origin Game Conversion** | Also offers balls only another Game Boy Advance game allows (marked ↺). On Apply, the Pokémon is moved to that game's wild or static encounter for its ball; trainer, nickname, level, EVs and item stay, while origin game, met data, PID and IVs change. Colosseum/XD are not used. |
+
+Recommended balls come from the *Legal Matching Pokéballs 2.1* sheet, limited to balls the
+species can legally be caught in on the save's game (**N/A** when none; Allow Illegal shows
+them all). On a Nintendo Switch Online save (`FireRed_e.sav`, `LeafGreen_e.sav`), which can't
+trade with Ruby/Sapphire/Emerald, that means FireRed/LeafGreen's own balls only — Poké, Great,
+Ultra, Master, Safari and Premier — and Origin Game Conversion is unavailable. In the Ball column, click to cycle the recommended balls; **▾** or right-click
+lists the other legal balls and **Off**. Normal and shiny choices are separate and saved per
+species.
+
+A hatched Pokémon whose ball needs a catch is rebuilt as a catch in the save's game —
+unless the egg route gives it a better nature, ability or stats (with Egg Conversion on),
+in which case it stays egg-hatched and the log says why (⇆).
+
+### Command-line apply
+
+`tools/apply-save.ps1 -Save <path> [-DryRun]` applies Battle Builder to a save without
+PKHeX, as if Check All Competitive were set, using the builds and balls last selected in
+the app. Box range, party, Allow Illegal, Origin Game Conversion and HOME-transferable
+(`-HomeTransfer yes|no`; on by default for a Switch Online save) can be overridden. The
+save is backed up first, and nothing is written if any Pokémon's species would change.
+Close the save in PKHeX first.
 
 ---
 
@@ -208,6 +246,14 @@ corresponding checkboxes are enabled.
 Type in the **search box** above the grid to filter rows by species name in real time.
 When **Competitive Moves** is on, the moves sub-row follows its parent species row in
 the filter results.
+
+### Pokémon Column (RBY, GSC, FRLG)
+
+The **Pokémon** column after Dex # shows each species' normal and shiny sprite for the
+save's own game, from a local sprite folder (`generation-N/pokemon/main-sprites/<game>/`).
+Click the column header to switch every row to the game's next view (Gen 1: grayscale
+front and back first, then color); the header names the current view. Set the folder with
+`"SpriteFolder"` in `plugins/builds/settings.json`; without sprites the column stays blank.
 
 ### Battle Form Toggle (BF column)
 
